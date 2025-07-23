@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Basit LOT Scanner</title>
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <style>
+    video { width: 100%; max-width: 480px; margin: 1em auto; display: block; }
+    button { padding: 10px 20px; font-size: 16px; }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>📦 GS1 Barkod Okuyucu</h2>
+  <video id="video" autoplay></video>
+  <div style="text-align: center;">
+    <button onclick="startScan()">📷 Kamerayı Başlat</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbxMC_EPnTzKG7n4pKUU-RQm9P2LOfji2uGQT1LgIHtJjrO9yAQCgHa7Sn3_pQExTKOpNQ/exec";
+
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const videoElement = document.getElementById('video');
+    const resultElement = document.getElementById('result');
+
+    function parseGS1(data) {
+      let gtinMatch = data.match(/01(\d{14})/);
+      let lotMatch = data.match(/10([^]+)/);
+      let sktMatch = data.match(/17(\d{6})/);
+
+      let gtin = gtinMatch ? gtinMatch[1] : "";
+      let lot = lotMatch ? lotMatch[1] : "";
+      let skt = sktMatch ? sktMatch[1].replace(/(..)(..)(..)/, "$1/$2/$3") : "";
+
+      return { gtin, lot, skt };
+    }
+
+    function sendToSheet(gtin, lot, skt, raw) {
+      fetch(scriptURL, {
+        method: 'POST',
+        body: new URLSearchParams({ GTIN: gtin, LOT: lot, SKT: skt, Barkod: raw })
+      }).then(response => {
+        resultElement.textContent = "✔️ Gönderildi: " + raw;
+      }).catch(error => {
+        resultElement.textContent = "❌ Hata: " + error;
+      });
+    }
+
+    function startScan() {
+      codeReader.decodeFromVideoDevice(null, videoElement, (result, err) => {
+        if (result) {
+          let raw = result.getText();
+          const { gtin, lot, skt } = parseGS1(raw);
+          sendToSheet(gtin, lot, skt, raw);
+          codeReader.reset(); // durdur
+        }
+      });
+    }
+  </script>
+</body>
+</html>
