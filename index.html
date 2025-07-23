@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>📷 LOT Scanner</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
@@ -13,31 +13,26 @@
 </head>
 <body>
   <h1>📷 LOT Scanner</h1>
-  <video id="video" muted autoplay></video><br>
-  <button id="startButton">🎥 Kamerayı Başlat</button>
+  <video id="video" autoplay></video><br>
+  <button id="startButton">📸 Kamerayı Başlat</button>
   <div id="result"></div>
 
   <script type="module">
-    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js";
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js';
 
     const codeReader = new BrowserMultiFormatReader();
-    const video = document.getElementById("video");
-    const resultDiv = document.getElementById("result");
+    const video = document.getElementById('video');
+    const resultDiv = document.getElementById('result');
 
-    document.getElementById("startButton").addEventListener("click", async () => {
-      resultDiv.innerHTML = "🔄 Kamera başlatılıyor...";
-      try {
-        const result = await codeReader.decodeFromVideoDevice(null, video, (result, err) => {
-          if (result) {
-            const barcode = result.getText();
-            resultDiv.innerHTML = `<div class="success">✅ Barkod: ${barcode}</div>`;
-            sendToSheet(barcode);
-            codeReader.reset();
-          }
-        });
-      } catch (err) {
-        resultDiv.innerHTML = `<div class="error">❌ Kamera açılamadı: ${err}</div>`;
-      }
+    document.getElementById('startButton').addEventListener('click', () => {
+      codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+        if (result) {
+          const code = result.getText();
+          resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
+          sendToSheet(code);
+          codeReader.reset(); // Kamerayı durdur
+        }
+      });
     });
 
     function sendToSheet(barcode) {
@@ -46,8 +41,8 @@
         body: JSON.stringify({ barcode }),
         headers: { "Content-Type": "application/json" }
       })
-      .then(res => res.ok ? res.text() : Promise.reject("Gönderim başarısız"))
-      .then(msg => resultDiv.innerHTML += `<div class="success">✅ Veri gönderildi</div>`)
+      .then(res => res.ok ? res.text() : Promise.reject("Gönderim hatası"))
+      .then(msg => resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`)
       .catch(err => resultDiv.innerHTML += `<div class="error">❌ Veri gönderilemedi: ${err}</div>`);
     }
   </script>
