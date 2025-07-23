@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>📷 LOT Scanner</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    video { width: 100%; max-width: 400px; height: auto; border: 2px solid #000; }
+    #result { margin-top: 10px; font-weight: bold; }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <h1>📷 LOT Scanner</h1>
+  <video id="video" autoplay></video><br>
+  <button id="startButton">📸 Kamerayı Başlat</button>
+  <div id="result"></div>
+
+  <script type="module">
+    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js";
+
+    const codeReader = new BrowserMultiFormatReader();
+    const video = document.getElementById("video");
+    const resultDiv = document.getElementById("result");
+
+    document.getElementById("startButton").addEventListener("click", async () => {
+      try {
+        const result = await codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+          if (result) {
+            const code = result.getText();
+            resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
+            sendToSheet(code);
+            codeReader.reset(); // Kamera durdurulur
+          }
+        });
+      } catch (e) {
+        resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${e}</div>`;
+      }
+    });
+
+    function sendToSheet(barcode) {
+      fetch("https://script.google.com/macros/s/AKfycbxMC_EPnTzKG7n4pKUU-RQm9P2LOfji2uGQTLLjHt3jr09yAQcGfa75n3_pOEkTKOpNQ/exec", {
+        method: "POST",
+        body: JSON.stringify({ barcode }),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => res.ok ? res.text() : Promise.reject("Gönderim hatası"))
+      .then(msg => resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`)
+      .catch(err => resultDiv.innerHTML += `<div class="error">❌ Veri gönderilemedi: ${err}</div>`);
+    }
+  </script>
+</body>
+</html>
