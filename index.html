@@ -24,25 +24,27 @@
     const resultDiv = document.getElementById('result');
 
     function startScanner() {
-      codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-        if (result) {
-          const code = result.getText();
-          resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
-          sendToSheet(code);
-          codeReader.reset();
-        }
-      }).catch(err => {
-        resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
-      });
+      codeReader
+        .decodeFromVideoDevice(null, 'video', (result, err) => {
+          if (result) {
+            const code = result.getText();
+            resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
+            sendToSheet(code);
+            codeReader.reset(); // Tek seferlik okutma
+          }
+        })
+        .catch(err => {
+          resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
+        });
     }
 
     function sendToSheet(barcode) {
-      fetch("https://script.google.com/macros/s/AKfycbxOS72pc0PzVI-ifZziKCIt2eHqRIOQxLELnxhJxnvB5UVNup8IzhDbbkU8ZaFLqQVYxA/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbwPi109kiU9k_XfGAzVuI7UgEbCx71l3uyg2120HI8K23dYJCpVO7akuY66sDX5g8h3ew/exec", {
         method: "POST",
-        body: JSON.stringify({ barcode }),
         headers: {
           "Content-Type": "application/json"
-        }
+        },
+        body: JSON.stringify({ barcode: barcode })
       })
       .then(res => res.ok ? res.text() : Promise.reject("Gönderim hatası"))
       .then(msg => resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`)
@@ -51,5 +53,3 @@
   </script>
 </body>
 </html>
-
-
