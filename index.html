@@ -29,9 +29,10 @@
           if (result) {
             const code = result.getText();
             resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
-            sendToSheet(code);
-            codeReader.reset();
-          }
+            sendToSheet(code).then(() => {
+  codeReader.reset();
+});
+
         })
         .catch(err => {
           resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
