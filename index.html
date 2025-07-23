@@ -40,7 +40,7 @@
     });
 
     function sendToSheet(barcode) {
-      fetch("https://script.google.com/macros/s/AKfycbxMC_EPnTzKG7n4pKUU-RQm9P2LOfji2uGQTLLjHt3jr09yAQcGfa75n3_pOEkTKOpNQ/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbzotdc7n622T-H5nv1lcT_QNMeiIoBzhlcmWrpfSB3u7F5Rx5m_OZdIXLNGSmQXMpH4/exec", {
         method: "POST",
         body: JSON.stringify({ barcode }),
         headers: { "Content-Type": "application/json" }
