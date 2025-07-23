@@ -24,18 +24,16 @@
     const resultDiv = document.getElementById('result');
 
     function startScanner() {
-      codeReader
-        .decodeFromVideoDevice(null, 'video', (result, err) => {
-          if (result) {
-            const code = result.getText();
-            resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
-            sendToSheet(code);
-            codeReader.reset();
-          }
-        })
-        .catch(err => {
-          resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
-        });
+      codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
+        if (result) {
+          const code = result.getText();
+          resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
+          sendToSheet(code);
+          codeReader.reset();
+        }
+      }).catch(err => {
+        resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
+      });
     }
 
     function sendToSheet(barcode) {
@@ -53,4 +51,5 @@
   </script>
 </body>
 </html>
+
 
