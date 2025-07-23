@@ -30,7 +30,7 @@
             const code = result.getText();
             resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
             sendToSheet(code);
-            codeReader.reset(); // Tek seferlik okutma
+            codeReader.reset();
           }
         })
         .catch(err => {
@@ -39,16 +39,20 @@
     }
 
     function sendToSheet(barcode) {
-      fetch("https://script.google.com/macros/s/AKfycbwPi109kiU9k_XfGAzVuI7UgEbCx71l3uyg2120HI8K23dYJCpVO7akuY66sDX5g8h3ew/exec", {
+      fetch("https://script.google.com/macros/s/AKfycbyy2I2N6SFEvU6KvwPXYWskiNsRzCQg0ooLRlNdJZW2MqALiElgWcfAvGpAmM1vJuu8PA/exec", {
         method: "POST",
+        mode: "no-cors", // ÖNEMLİ
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ barcode: barcode })
+        body: JSON.stringify({ barcode })
       })
-      .then(res => res.ok ? res.text() : Promise.reject("Gönderim hatası"))
-      .then(msg => resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`)
-      .catch(err => resultDiv.innerHTML += `<div class="error">❌ Veri gönderilemedi: ${err}</div>`);
+      .then(() => {
+        resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`;
+      })
+      .catch(err => {
+        resultDiv.innerHTML += `<div class="error">❌ Gönderim hatası: ${err}</div>`;
+      });
     }
   </script>
 </body>
