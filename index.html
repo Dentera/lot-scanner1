@@ -30,9 +30,12 @@
             const code = result.getText();
             resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
             sendToSheet(code).then(() => {
-  codeReader.reset();
-});
-
+              resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`;
+              codeReader.reset();
+            }).catch(err => {
+              resultDiv.innerHTML += `<div class="error">❌ Veri gönderilemedi: ${err}</div>`;
+            });
+          }
         })
         .catch(err => {
           resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
@@ -40,21 +43,18 @@
     }
 
     function sendToSheet(barcode) {
-      fetch("https://script.google.com/macros/s/AKfycbyy2I2N6SFEvU6KvwPXYWskiNsRzCQg0ooLRlNdJZW2MqALiElgWcfAvGpAmM1vJuu8PA/exec", {
+      return fetch("https://script.google.com/macros/s/AKfycbwPi109kiU9k_XfGAzVuI7UgEbCx71l3uyg2120HI8K23dYJCpVO7akuY66sDX5g8h3ew/exec", {
         method: "POST",
-        mode: "no-cors", // ÖNEMLİ
+        body: JSON.stringify({ barcode }),
         headers: {
           "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ barcode })
-      })
-      .then(() => {
-        resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`;
-      })
-      .catch(err => {
-        resultDiv.innerHTML += `<div class="error">❌ Gönderim hatası: ${err}</div>`;
+        }
+      }).then(res => {
+        if (!res.ok) throw new Error("Gönderim hatası");
+        return res.text();
       });
     }
   </script>
 </body>
 </html>
+
