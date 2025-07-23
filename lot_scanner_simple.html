@@ -4,7 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>LOT Scanner</title>
-  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <script type="module">
+    import { BrowserMultiFormatReader } from 'https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm';
+
+    const codeReader = new BrowserMultiFormatReader();
+    const videoElement = document.getElementById('video');
+    const barcodeData = document.getElementById('barcodeData');
+    const status = document.getElementById('status');
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      codeReader.decodeOnceFromVideoDevice(undefined, 'video')
+        .then(result => {
+          const data = result.getText();
+          barcodeData.textContent = data;
+          sendToGoogleSheets(data);
+        })
+        .catch(err => {
+          status.textContent = '❌ Barkod okunamadı: ' + err;
+        });
+    });
+
+    function sendToGoogleSheets(data) {
+      const url = "https://script.google.com/macros/s/AKfycbxMC_EPnTzKG7n4pKUU-RQm9P2LOfji2uGQT1LgIHtJjrO9yAQCgHa7Sn3_pQExTKOpNQ/exec";
+      fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ barkod: data }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      .then(r => r.text())
+      .then(txt => {
+        status.innerHTML = '✅ Veri gönderildi.';
+      })
+      .catch(err => {
+        status.innerHTML = '❌ Hata: ' + err;
+      });
+    }
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,62 +47,25 @@
       padding: 20px;
     }
     video {
-      width: 80%;
+      width: 90%;
       max-width: 400px;
-      border: 2px solid #000;
-      border-radius: 8px;
+      border: 2px solid black;
+      border-radius: 10px;
     }
-    #result {
+    #status {
       margin-top: 20px;
-      font-size: 18px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <h1>📷 LOT Scanner</h1>
   <video id="video" autoplay muted playsinline></video>
-  <div>
-    <button onclick="startScanner()">📸 Kamerayı Başlat</button>
+  <br><br>
+  <button id="startBtn">📸 Kamerayı Başlat</button>
+  <div id="result">
+    <p>📋 Barkod: <span id="barcodeData">-</span></p>
+    <p id="status"></p>
   </div>
-  <div id="result">📋 Barkod: <span id="barcodeData">-</span></div>
-  <div id="status"></div>
-
-  <script>
-    const codeReader = new ZXing.BrowserBarcodeReader();
-    const videoElement = document.getElementById('video');
-    const barcodeData = document.getElementById('barcodeData');
-    const status = document.getElementById('status');
-
-    function startScanner() {
-      codeReader.decodeFromVideoDevice(null, videoElement, (result, err) => {
-        if (result) {
-          const data = result.text;
-          barcodeData.textContent = data;
-          sendToGoogleSheets(data);
-          codeReader.reset();
-        }
-      });
-    }
-
-    function sendToGoogleSheets(data) {
-      const url = "https://script.google.com/macros/s/AKfycbxMC_EPnTzKG7n4pKUU-RQm9P2LOfji2uGQT1LgIHtJjrO9yAQCgHa7Sn3_pQExTKOpNQ/exec";
-      fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({ barkod: data }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.text())
-      .then(text => {
-        status.innerHTML = "✅ Veri gönderildi.";
-        console.log(text);
-      })
-      .catch(err => {
-        status.innerHTML = "❌ Hata: " + err;
-        console.error(err);
-      });
-    }
-  </script>
 </body>
 </html>
