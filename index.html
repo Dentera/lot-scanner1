@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>📷 LOT Scanner</title>
   <style>
     body { font-family: sans-serif; text-align: center; padding: 20px; }
-    video { width: 100%; max-width: 400px; height: auto; border: 2px solid #000; }
+    video { width: 300px; height: auto; border: 2px solid #000; }
     #result { margin-top: 10px; font-weight: bold; }
     .error { color: red; }
     .success { color: green; }
@@ -14,36 +14,37 @@
 <body>
   <h1>📷 LOT Scanner</h1>
   <video id="video" autoplay></video><br>
-  <button id="startButton">📸 Kamerayı Başlat</button>
+  <button onclick="startScanner()">📸 Kamerayı Başlat</button>
   <div id="result"></div>
 
-  <script type="module">
-    import { BrowserMultiFormatReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js";
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+  <script>
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const videoElement = document.getElementById('video');
+    const resultDiv = document.getElementById('result');
 
-    const codeReader = new BrowserMultiFormatReader();
-    const video = document.getElementById("video");
-    const resultDiv = document.getElementById("result");
-
-    document.getElementById("startButton").addEventListener("click", async () => {
-      try {
-        const result = await codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+    function startScanner() {
+      codeReader
+        .decodeFromVideoDevice(null, 'video', (result, err) => {
           if (result) {
             const code = result.getText();
             resultDiv.innerHTML = `<div class="success">✅ Barkod: ${code}</div>`;
             sendToSheet(code);
-            codeReader.reset(); // Kamera durdurulur
+            codeReader.reset();
           }
+        })
+        .catch(err => {
+          resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${err}</div>`;
         });
-      } catch (e) {
-        resultDiv.innerHTML = `<div class="error">❌ Kamera başlatılamadı: ${e}</div>`;
-      }
-    });
+    }
 
     function sendToSheet(barcode) {
       fetch("https://script.google.com/macros/s/AKfycbzotdc7n622T-H5nv1lcT_QNMeiIoBzhlcmWrpfSB3u7F5Rx5m_OZdIXLNGSmQXMpH4/exec", {
         method: "POST",
         body: JSON.stringify({ barcode }),
-        headers: { "Content-Type": "application/json" }
+        headers: {
+          "Content-Type": "application/json"
+        }
       })
       .then(res => res.ok ? res.text() : Promise.reject("Gönderim hatası"))
       .then(msg => resultDiv.innerHTML += `<div class="success">📤 Veri gönderildi</div>`)
@@ -52,3 +53,4 @@
   </script>
 </body>
 </html>
+
